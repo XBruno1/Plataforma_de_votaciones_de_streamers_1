@@ -1,59 +1,38 @@
-import gradio as gr
-def create_ui(ui_controller):
-    def vote_wrapper(poll_id: str, username: str, option: str) -> str:
-        return ui_controller.vote(poll_id, username, option)
+from src.services.poll_service import PollService
+from src.services.user_service import UserService
+from src.services.nft_service import NFTService
 
-    def create_poll_wrapper(question: str, options: str, duration: str) -> str:
-        return ui_controller.create_poll(question, options, duration)
+class UIController:
+    def __init__(self, poll_service: PollService, user_service: UserService, nft_service: NFTService):
+        self.poll_service = poll_service
+        self.user_service = user_service
+        self.nft_service = nft_service
 
-    def login_wrapper(username: str, password: str) -> str:
-        return ui_controller.login(username, password)
+    def create_poll(self, question: str, options: str, duration: str) -> str:
+        try:
+            options_list = [opt.strip() for opt in options.split(",")]
+            duration_int = int(duration)
+            poll = self.poll_service.create_poll(question, options_list, duration_int)
+            return f"Poll created: {poll.id}"
+        except ValueError as e:
+            return f"Error: {e}"
 
-    def register_wrapper(username: str, password: str) -> str:
-        return ui_controller.register(username, password)
+    def vote(self, poll_id: str, username: str, option: str) -> str:
+        try:
+            self.poll_service.vote(poll_id, username, option)
+            return "Vote registered successfully!"
+        except ValueError as e:
+            return f"Error: {e}"
 
-    demo = gr.TabbedInterface(
-        [
-            gr.Interface(
-                fn=create_poll_wrapper,
-                inputs=[
-                    gr.Textbox(label="Question"),
-                    gr.Textbox(label="Options (comma-separated)"),
-                    gr.Textbox(label="Duration (seconds)")
-                ],
-                outputs="text",
-                title="Create Poll"
-            ),
-            gr.Interface(
-                fn=vote_wrapper,
-                inputs=[
-                    gr.Textbox(label="Poll ID"),
-                    gr.Textbox(label="Username"),
-                    gr.Textbox(label="Option")
-                ],
-                outputs="text",
-                title="Vote in Poll"
-            ),
-            gr.Interface(
-                fn=login_wrapper,
-                inputs=[
-                    gr.Textbox(label="Username"),
-                    gr.Textbox(label="Password")
-                ],
-                outputs="text",
-                title="Login"
-            ),
-            gr.Interface(
-                fn=register_wrapper,
-                inputs=[
-                    gr.Textbox(label="Username"),
-                    gr.Textbox(label="Password")
-                ],
-                outputs="text",
-                title="Register"
-            )
-        ],
-        ["Create Poll", "Vote", "Login", "Register"],
-        title="StreamApp Voting System"
-    )
-    return demo
+    def login(self, username: str, password: str) -> str:
+        try:
+            return self.user_service.login(username, password)
+        except ValueError as e:
+            return f"Error: {e}"
+
+    def register(self, username: str, password: str) -> str:
+        try:
+            self.user_service.register(username, password)
+            return "User registered successfully!"
+        except ValueError as e:
+            return f"Error: {e}"
