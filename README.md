@@ -1,1 +1,2 @@
 # Plataforma_de_votaciones_de_streamers_1
+https://github.com/XBruno1/Plataforma_de_votaciones_de_streamers_1.git
